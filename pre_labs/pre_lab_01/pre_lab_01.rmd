@@ -220,8 +220,8 @@ umd_courses |>
     total_seats = sum(seats),
     mean_seats = mean(seats),
     median_seats = median(seats),
-    # add minimum seats here
-    # add maximum seats here
+    min_seats = min(seats),
+    max_seats = max(seats)
   ) |>
   arrange(desc(total_seats))
 ```
@@ -230,14 +230,14 @@ Compared to the previous codeblock, what has changed and how did that affect the
 
 **Answer**
 
-### Task 12: Questions
+### Task 15: Questions
 
 No code here; I want you to provide three questions that this data suggests to you. What would you like to ask it?
 
 **Answer**
 
-1.  
+1.  What are the most popular courses or most signed up for courses?
 
-2.  
+2.  Have there been any drastic changes in enrollment for specific courses?
 
-3.  
+3.  What are the most seats there have been in one class and what is it? Does this have any significance?
