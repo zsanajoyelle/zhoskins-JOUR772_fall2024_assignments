@@ -1,0 +1,121 @@
+---
+title: "lab_02"
+author: "Derek Willis"
+adapted by: "Daniel Trielli"
+date: "2024-05-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load libraries and establish settings
+
+```{r}
+# Turn off scientific notation
+options(scipen=999)
+
+# Load the tidyverse. If you have not installed the tidyverse already, remove the # from the next line and run it first.  
+# install.packages('tidyverse')
+library(tidyverse)
+library(lubridate)
+```
+
+## Load Data
+
+Let's keep working with the UMD courses and Maryland campaign expense data we used in the pre_lab.
+
+```{r}
+umd_courses <- read_rds("data/umd_courses.rds")
+maryland_expenses <- read_csv("data/maryland_expenses.csv")
+```
+
+## Answer questions
+
+### **Q1** How many departments have offered the courses with "Climate" in the title and at least one seat? Which department has offered the most?
+
+```{r}
+umd_courses |>
+  filter(str_detect(title, "Climate")& seats >= 1)
+
+```
+
+**A1: 4 departments have offered courses with "Climate" in the title and have at least 1 seat. The Anthropology department and the Atmospheric and Oceanic Science department are tied for offering the most courses with 4 total.**
+
+------------------------------------------------------------------------
+
+### **Q2** Which departments have the most courses in the Fall 2023 term? And which departments in that term have at least one syllabus posted? How are the top departments different in each result? Where is Journalism in those results?
+
+```{r}
+umd_courses |> filter(term == 202308 & syllabus_count >=1) |>
+ group_by(department) |>
+  summarise(
+    count_classes = n()
+  ) |>
+  arrange(desc(count_classes))
+```
+
+**A2: Business and Management had the most courses in the Fall 2023 term. Journalism has only had 12 courses that had at least one syllabus posted.**
+
+------------------------------------------------------------------------
+
+### **Q3** Using the Maryland campaign expenses data, change the datatype of the expenditure_date column so that it is a date and not a chr. Then create a new column for the month based on expenditure_date. Then write code that shows total amount spent each month by Wes Moore's committee (you'll need to search the data to find the exact name). Write a sentence describing the pattern of spending over time.
+
+```{r}
+maryland_expenses <- maryland_expenses |> mutate(expenditure_date=mdy(expenditure_date))
+
+head(maryland_expenses) |>
+mutate(month = floor_date(expenditure_date, "month")) |>
+group_by(month) |>
+  summarise(total_amount = sum(amount)) |>
+  arrange(desc(total_amount))
+maryland_expenses |>
+filter (str_detect(payee_type, "Candidate Committee"))
+```
+
+**A3: The total amount spent per month by Wes Moore's committee mostly decreased, except for a \$100 increase from May 2021 to June 2021.**
+
+------------------------------------------------------------------------
+
+### **Q4** Using case_when(), create a column in the Maryland expenses data called `spending_location` indicating whether each record indicated money spent in Maryland or outside Maryland. For records that are in Maryland, make the new column's value "In-state" and for the others, make it "Out of state". Then write code that shows the total amount of money spent in each category and describe the results. You can do this in one statement or break it up into two statements (saving the new column to your dataframe).
+
+```{r}
+maryland_expenses |>
+  mutate(
+    spending_location = case_when(
+        str_detect(address, " Maryland ") ~ "In State",
+        str_detect(address, " California ") ~ "Out of State",
+        str_detect(address, " Washington ") ~ "Out of State",
+        str_detect(address, " Louisiana ") ~ "Out of State",
+        str_detect(address, " Florida ") ~ "Out of State",
+        str_detect(address, " North Carolina ") ~ "Out of State",
+        str_detect(address, " Massachusetts ") ~ "Out of State",
+        str_detect(address, " West Virginia ") ~ "Out of State",
+        str_detect(address, " Virginia ") ~ "Out of State",
+        .default = NA
+      )
+  )
+spending_location |> 
+  group_by(spending_location) |>
+  summarise(total_amount = sum(amount)) |>
+  arrange(desc(total_amount))
+```
+
+**A4: In state expenses equal \$77,723,146 and out of state expenses equal \$33,164,994. In state expenses are over two times greater than out of state expenses.**
+
+------------------------------------------------------------------------
+
+### **Q5** Choose your own adventure: using either the UMD courses or campaign expenses data, ask and answer a question that is different than the previous ones. You can use one of the ones you provided in the pre_lab.
+
+```{r}
+journalism_courses <- umd_courses |> filter(department == "Journalism" &
+seats <= 15)
+
+head(journalism_courses)
+
+```
+
+How many courses have less than 15 seats and are in the Journalism department?
+
+**A5: 6 courses have less than 15 seats and are in the Journalism department.**
