@@ -70,7 +70,7 @@ group_by(date) |>
 
 Q2. You want to understand if there's a pattern in the day of the week that overdose calls are made. Add a column to your dataframe that displays what day of the week each date represents. You should search for how to do that using lubridate. Then write code to calculate the number of calls for each day of the week, and add a column to that result that calculates the percentage of all calls that occurred on each day of the week (so you want a dataframe with the day of the week, total number of calls and the percentage of calls on that day out of the total number of all calls). Describe your findings to me. **- Googling required**
 
-**A2; The weekends have higher percentages in the amount of overdose calls than other says pf the week, with Saturday at the highest percentage of calls out of the overall total number of calls. The lowest percentage is Thursday..**
+**A2; The weekends have higher percentages in the amount of overdose calls than other says pf the week, with Saturday at the highest percentage of calls out of the overall total number of calls. The lowest percentage is Thursday.**
 
 ```{r}
 OD_calls |> 
