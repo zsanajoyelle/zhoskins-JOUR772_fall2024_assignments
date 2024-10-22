@@ -86,23 +86,76 @@ arrange(desc(total_calls_per_county))
 
 ### Q3. Let's turn to the Baltimore City data. You're interested in exploring calls in zip codes with a high percentage of children under 18. Write code to isolate calls in zip codes where the percentage of under 18 population is at least 75% and then show the zip code and population and how many calls occurred in each of those zip codes.
 
-Where are those zip codes in the city?
+Where are those zip codes in the city? **21217 is Central Baltimore, 21223 is South Baltimore, 21202 is East Baltimore, 21213 is Northeast Baltimore**
 
 Q3b. Add a column to your code that calculates the number of calls per 1,000 people for those zip codes. To calculate a per capita rate, you might find this short guide handy: [https://observablehq.com/\@palewire/per-capita-calculator](https://observablehq.com/@palewire/per-capita-calculator){.uri}.
 
-Which zip code has the highest rate of calls per 1,000 people? Find the neighborhoods in that zip code that are listed in the data - you can use group_by or distinct to do this. What are some of those neighborhoods?
+Which zip code has the highest rate of calls per 1,000 people? Find the neighborhoods in that zip code that are listed in the data - you can use group_by or distinct to do this. What are some of those neighborhoods? **North Hartford Road and Hamilton Hills.**
 
 A3.
 
 ```{r}
 baltimore_calls_demographics |>
-  filter()
+  filter(PCT_UNDER_18 >= 75) |>
+  group_by(ZCTA5N) |>                       
+  summarise(population = POPULATION[1],   
+            total_calls = n()) |>           
+  arrange(desc(total_calls)) |>           
+  select(ZCTA5N, population, total_calls)
+
+baltimore_calls_demographics <- baltimore_calls_demographics |>
+  group_by(ZCTA5N) |>
+  mutate(
+    total_calls = n(),
+    calls_per_1000 = (total_calls / sum(POPULATION)) * 1000
+  )
+
+highest_rate_calls <- baltimore_calls_demographics |>
+  group_by(ZCTA5N, neighborhood) |>
+  summarise(
+    total_calls = n(),
+    population = sum(POPULATION),
+    calls_per_1000 = (total_calls / population) * 1000
+  ) |>
+  arrange(desc(calls_per_1000))
+
 ```
 
 ### Q4. Choose your own adventure: I want you to come up with a question you could ask of the Baltimore City data that combines both the calls and the demographic information. You must use both demographics and the overdose call data in your work.
 
-A4:
+**A4: What zip code has the highest percentage of Black residents, and what neighborhoods are included in that zip code, along with the total number of overdose calls? 21216 has the highest percentage of Black residents with 96.1% and the most total overdose calls with 2016. The neighborhoods included in this zipcode is Bridgeview/Greenlawn.**
+
+**NOTE:** I know that before we used a function to remove N/A from teh dataset, but I could not find it in the previous pre-labs. So I asked Chat GPT: "when coding in R, how do you make sure your result disregards NA in a dataset?" and it told me:
+
+"In R, to ensure your results disregard `NA` values in a dataset, you can use the argument `na.rm = TRUE` in many functions. This will remove or ignore missing values when performing calculations or summary operations. Here are some common examples:
+
+1.  **For sums or means:**
+
+    ``` r
+    sum(data$column, na.rm = TRUE)
+    mean(data$column, na.rm = TRUE)
+    ```
+
+2.  **For filtering out NAs in a dataset:** You can use `na.omit()` to remove rows with any `NA` values.
+
+    ``` r
+    clean_data <- na.omit(data)
+    ```
+
+3.  **For removing NAs in a specific column:** You can filter rows that do not have `NA` in a particular column.
+
+    ``` r
+    clean_data <- data[!is.na(data$column), ]
+    ```
+
+By using these methods, you ensure that `NA` values are disregarded in your calculations or data analysis."
 
 ```{r}
-
+baltimore_calls_demographics |>
+  mutate(pct_black = PCT_BLACK_NON_HISPANIC) |>
+  group_by(ZCTA5N, neighborhood) |>
+  summarise(total_overdose_calls = sum(total_calls, na.rm = TRUE), 
+            pct_black = mean(pct_black, na.rm = TRUE)) |>
+  arrange(desc(pct_black)) |>
+  select(ZCTA5N, neighborhood, pct_black, total_overdose_calls)
 ```
