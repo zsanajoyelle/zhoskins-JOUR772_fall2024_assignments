@@ -1,0 +1,186 @@
+---
+title: "pre_lab_07.Rmd"
+author: "derek willis"
+date: "2023-03-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Task 1: Load libraries and settings
+
+**Task** Run the following code in the gray-colored codeblock below to load the tidyverse library and the tidycensus library (remove the comment in front of install.packages if you need to install the latter)
+
+```{r}
+# turn off sci notation
+options(scipen=999)
+library(tidyverse)
+# if needed, install tidycensus, then load it.
+# install.packages("tidycensus")
+library(tidycensus)
+```
+
+# Intro to APIs: The Census
+
+We're going to use a library called `tidycensus` which makes calls to the Census API in a very tidy way, and gives you back tidy data. That means we don't have to go through the process of importing the data from a file. I can't tell you how amazing this is, speaking from experience.
+
+To use the API, you need to [an API key from the Census Bureau](https://api.census.gov/data/key_signup.html). It takes a few minutes and you need to activate your key via email. Once you have your key, you need to set that for this session. Just FYI: Your key is your key. Do not share it.
+
+### Task 2: Sign up for an API Key and set it
+
+**Task** Replace YOUR KEY HERE in the codeblock below with your Census API Key (leave the quotemarks).
+
+```{r echo=FALSE}
+census_api_key("0648e31fdecb0ac87a5830f1f76ac8f8069b33e2", install=TRUE)
+```
+
+```{r}
+readRenviron("~/.Renviron")
+```
+
+The `install=TRUE` part saves your key for future use.
+
+So to give you some idea of how complicated the data is, let's pull up just one file from the decennial Census. We'll use Demographic and Housing Characteristics, or DHC, which lists the variables available for major population and housing stuff. The load_libraries() function makes a list of all available variables.
+
+```{r}
+dhc_df <- load_variables(year = 2020, dataset = "dhc")
+
+#Up until 2010, the variables were kept in a file called sf1, with different table names
+sf1_df <- load_variables(year = 2010, dataset = "sf1")
+```
+
+There are three columns here: each of those that are called "name" are individual tables. The labels and concepts explains the data contained in them.
+
+### Task 3: Calculate the fastest-growing state
+
+So let's try to answer a question using the Census. What is the fastest growing state since 2000?
+
+To answer this, we need to pull the total population by state in each of the decennial census.
+
+**Task** Run the following codeblock and examine the 2010 results
+
+```{r}
+#get_decennial() grabs the data from the Census. We have to specify a geography level, the variable (table name) and the year
+p20 <- get_decennial(geography = "state", variables = "P1_001N", year = 2020)
+
+#Again, for previous years, those variables were different
+p00 <- get_decennial(geography = "state", variables = "P001001", year = 2000)
+p10 <- get_decennial(geography = "state", variables = "P001001", year = 2010)
+
+```
+
+Let's take a peek at 2020.
+
+```{r}
+p20
+```
+
+As you can see, we have a GEOID, NAME, then variable and value. Because those are named the same thing on the different datasets we have, to merge them together, we need to rename them. Remember how we used `rename` in the last lab? We're going to use it some more.
+
+**Task** Run the following codeblock to rename the population total columns in each dataframe, and merges both datasets:
+
+```{r}
+p20 |> select(GEOID, NAME, value) |> rename(population2020=value) -> p20
+p10 |> select(GEOID, NAME, value) |> rename(population2010=value) -> p10
+
+alldata <- p10 |> inner_join(p20)
+```
+
+And now we calculate the percent change.
+
+**Task** Run the following codeblock to calculate the percentage change and put the state with the largest percentage growth below. **Answer: Utah has the highest percent change with about an 18.4% increase from 2012 and 2020.**
+
+```{r}
+alldata |> mutate(change = ((population2020-population2010)/population2010)*100) |> arrange(desc(change))
+```
+
+## The ACS
+
+In 2010, the Census Bureau replaced SF3 with the American Community Survey. The Good News is that the data would be updated on a rolling basis. The bad news is that it's more complicated because it's more like survey data with a large sample. That means there's margins of error and confidence intervals to worry about.
+
+What is Maryland's richest county?
+
+We can measure this by median household income. That variable is `B19013_001`, so we can get that data like this (I'm narrowing it to the top 20 for simplicity):
+
+### Task 4: Answer Questions with ACS Data
+
+**Task** Run the following codeblock to find the Maryland county with the highest median household income and put the answer below. **Answer: Howard County has the highest median household income – it is about** \$140,971 based on the statistical sample from the ACS Data. (Plus or minus \$**2,122 - margin or error).**
+
+```{r}
+md <- get_acs(geography = "county",
+              variables = c(medincome = "B19013_001"),
+              state = "MD",
+              year = 2022)
+
+md <- md |> arrange(desc(estimate)) |> top_n(20, estimate)
+
+md
+```
+
+What do the top counties all have in common? Lots of suburban flight from D.C and Baltimore. But do the margins of error let us say one county is richer than the other? We can find this out visually using error bars. Don't worry much about the code here -- we'll cover that soon enough.
+
+### Task 5: Margins of Error
+
+**Task** Run the following codeblock to create a chart showing the margin of error for each county. The current headline isn't very descriptive of the data. What should it be? **Answer:**
+
+```{r}
+md |>
+  mutate(NAME = gsub(" County, Maryland", "", NAME)) |>
+  ggplot(aes(x = estimate, y = reorder(NAME, estimate))) +
+  geom_errorbarh(aes(xmin = estimate - moe, xmax = estimate + moe)) +
+  geom_point(color = "red") +
+  labs(title = "Household income by county in Maryland",
+       subtitle = "2018-2022 American Community Survey",
+       y = "",
+       x = "ACS estimate (bars represent margin of error)")
+```
+
+As you can see, some of the error bars are quite wide. Some are narrow. But if the bars overlap, it means the difference between the two counties is within the margin of error, and the differences aren't statistically significant.
+
+Is the difference between Calvert and Montgomery significant? **Answer: No, because of the margin of error overlap.**
+
+Is the difference between Howard and everyone else significant? **Answer: Yes, Howard County is greater than all of the other counties, as there is no overlap.**
+
+### Task 6: Joining Multiple Years Together
+
+Let's ask another question of the ACS -- did any counties lose income from 2012 to 2022?
+
+Let's re-label our first household income data.
+
+**Task** Run the following codeblock to retrieve Maryland county median income from 2012 and from 2022.
+
+```{r}
+md22 <- get_acs(geography = "county",
+              variables = c(medincome = "B19013_001"),
+              state = "MD",
+              year = 2022)
+
+md12 <- get_acs(geography = "county",
+              variables = c(medincome = "B19013_001"),
+              state = "MD",
+              year = 2012)
+```
+
+What we're going to do next is a lot, but each step is simple. We're going to join the data together, so each county has one line of data. Then we're going to rename some fields that repeat. Then we're going to calculate the minimum and maximum value of the estimate using the margin of error. That'll help us later. After that, we're going to calculate a percent change and sort it by that change.
+
+**Task** Run the following codeblock to join the data, rename the population estimates and then calculate the values we need. Notice how we select *after* we do the initial calculations so we only see the columns we're interested in (and drop the ones we don't want to see). Also note how the select function has the minus sign (-) in front of some columns? That means we don't want to see them in our result. Which jurisdictions saw the largest increases in median income? Did any counties see their median incomes fall from 2010-2021?
+
+```{r}
+md12 |>
+  # join md12 to md22 using the shared GEOID and NAME columns
+  inner_join(md22, by=c("GEOID", "NAME")) |>
+  # rename the first estimate to clarify that it's from 2010 and the second estimate to clarify that it's from 2021
+  rename(estimate2012=estimate.x, estimate2022=estimate.y) |>
+  mutate(min2012 = estimate2012-moe.x, max2012 = estimate2012+moe.x, min2022 = estimate2022-moe.y, max2022 = estimate2022+moe.y) |>
+  select(-variable.x, -variable.y, -moe.x, -moe.y) |>
+  mutate(change = ((estimate2022-estimate2012)/estimate2012)*100) |>
+  arrange(desc(change))
+```
+
+### Task 7:
+
+Question: based on the table above, which counties win most income between the periods ending in 2012 and 2022?
+
+**Add your answer here: Baltimore City with about 43%, Garrett County with about 42%, and Allegany County with about 41%.**
