@@ -1,0 +1,167 @@
+---
+title: "Reverse Engineering Project"
+author: "Zsana Hoskins, Mary Burke"
+date: "10-18-24"
+output:
+  html_document:
+    theme: cerulean
+    highlight: pygments
+    toc: true
+    toc_float:
+      collapsed: true
+      smooth_scroll: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+In this notebook, we are reverse engineering the story, [Comic Books Are Still Made By Men, For Men and About Men](https://fivethirtyeight.com/features/women-in-comic-books/)
+
+## Load libraries
+
+Loading required libraries for this analysis.
+
+```{r echo=FALSE, message=FALSE}
+library(tidyverse)
+library(janitor)
+```
+
+## Load and Cleaning Data
+
+In this section, describe the source of the data, write a basic data dictionary for data you are working with, and discuss any caveats or issues you discovered working with this data.
+
+```{r}
+# Load required data
+# Path to data should be loaded from folder "data" i.e. read_csv("data/name_of_data.csv")
+
+# Clean required data and prepare for analysis if needed. 
+dc_data <- read_csv("data/dc-wikia-data.csv")
+marvel_data <- read_csv("data/marvel-wikia-data.csv") |> clean_names()
+
+```
+
+## Sentences to Engineer
+
+In this notebook, we are reverse engineering five sentences from the story.
+
+### Sentence 1
+
+-   **Sentence text**: Among the characters for which we have gender data, females made up only 29.3 percent of the DC character list and 24.7 percent of the Marvel roster. 
+-   **Analysis summary**: The numbers we got are only slightly different– we found that DC female characters make up 28.5% of their roster and for Marvel, women make up 23.4% of their roster. Overall, the findings align with what the original article claims—women make up very little of DC and Marvel's rosters. It is possible that the numbers are slightly different because some of the characters that appear to have no gender in the data were counted as women in the findings for the article.
+
+```{r}
+# Put code to reverse engineer sentence here
+dc_data |>
+  group_by(SEX) |> summarize(amount_women =n ()) |>
+mutate(pct_women =(amount_women/6896)*100)
+
+marvel_data |>
+  group_by(sex) |> summarize(amount_women =n()) |>
+  mutate(pct_women = (amount_women/16376)*100)
+
+# Display results of code below this codeblock
+
+```
+
+### Sentence 2
+
+-   **Sentence text**: Women and men were almost exactly equally likely to have a secret identity in the Marvel universe (49.4 percent of males and 49.5 percent of females), while in the DC universe 51 percent of males had a secret identity and 45 percent of females did. 
+-   **Analysis summary**: Using these datasets we got 31,8% of women in the DC Universe have secret identities and 36.6% of men have secret identities. For Marvel, we found that 39.2% of women characters have secret identities and 38.7% of men have secret identities. We think that these numbers may be below the numbers given in the article because there are other categories under identity other than Secret or Public. There are some characters that are categorized as "Known to Authorities Identity' and "No Dual Identity". It is unclear whether these were counted as secret identity or public in the findings for the article, however, if they were counted as secret that would increase the numbers.
+
+```{r}
+# Put code to reverse engineer sentence here
+
+dc_data |>
+  filter(SEX == "Female Characters" & ID == "Secret Identity") |>
+   summarize(amount_women =n ()) |>
+  mutate(pct_women =(amount_women/1967)*100)
+
+dc_data |>
+  filter(SEX == "Male Characters" & ID == "Secret Identity") |>
+   summarize(amount_men =n ()) |>
+  mutate(pct_men =(amount_men/4783)*100)
+
+
+marvel_data |>
+  filter(sex == "Female Characters" & id == "Secret Identity") |>
+summarize(amount_women =n()) |>
+  mutate(pct_women =(amount_women/3837)*100)
+
+marvel_data |>
+  filter(sex == "Male Characters" & id == "Secret Identity") |>
+summarize(amount_men =n()) |>
+  mutate(pct_men =(amount_men/11638)*100)
+
+# Display results of code below this codeblock
+
+```
+
+### Sentence 3
+
+-   **Sentence text**: You’ll see that — despite public attempts to pivot toward diversity — neither Marvel nor DC is introducing female characters at a rate approaching gender parity. 
+-   **Analysis summary**: [Write up two to three sentences describing the results of your analysis. Were you able to confirm the finding? If not, why not?]
+
+```{r}
+# Put code to reverse engineer sentence here
+dc_data |>
+  filter(SEX == "Female Characters" & YEAR == 2013) |>
+summarize(amount_women =n()) |>
+  mutate(pct_women =(amount_women/1967)*100)
+
+dc_data |>
+  filter(SEX == "Male Characters" & YEAR == 2013) |>
+   summarize(amount_men =n ()) |>
+  mutate(pct_men =(amount_men/4783)*100)
+
+
+marvel_data |>
+  filter(sex == "Female Characters" & year == 2013) |>
+summarize(amount_women =n ()) |>
+  mutate(pct_women =(amount_women/3837)*100)
+
+marvel_data |>
+  filter(sex == "Male Characters" & year == 2013) |>
+summarize(amount_men =n()) |>
+  mutate(pct_men =(amount_men/11638)*100)
+
+# Display results of code below this codeblock
+
+```
+
+### Sentence 4
+
+-   **Sentence text**: Of characters with gender data and 100 or more appearances (294 DC characters and 414 Marvel characters), only 29.0 percent of DC’s are female, and a similar 31.1 percent of the Marvel crowd is. 
+-   **Analysis summary**: In our findings, of characters with gender data and 100 or more appearances, 28.6% of DC's are female and 30.9% are female in Marvel's Universe. These numbers may be slightly different because some of the characters that are non-binary or have no gender (aliens, etc.) may have been counted in the findings for the original article.
+
+```{r}
+# Put code to reverse engineer sentence here
+dc_data |> 
+  filter(APPEARANCES >= 100, SEX == "Female Characters") |>
+summarize(amount_women =n()) |>
+  mutate(pct_women =(amount_women/297)*100)
+
+marvel_data |>
+  filter(appearances >= 100, sex == "Female Characters") |>
+summarize(amount_women =n()) |>
+  mutate(pct_women =(amount_women/414)*100)
+
+# Display results of code below this codeblock
+
+```
+
+### Sentence 5
+
+-   **Sentence text**: In both DC and Marvel, women were of neutral allegiance at a higher rate than men. 
+-   **Analysis summary**: [Write up two to three sentences describing the results of your analysis. Were you able to confirm the finding? If not, why not?]
+
+```{r}
+# Put code to reverse engineer sentence here
+
+# Display results of code below this codeblock
+
+```
+
+-30-
