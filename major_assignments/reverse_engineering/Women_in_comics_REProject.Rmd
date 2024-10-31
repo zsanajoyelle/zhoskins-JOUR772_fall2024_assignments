@@ -102,30 +102,42 @@ summarize(amount_men =n()) |>
 ### Sentence 3
 
 -   **Sentence text**: You’ll see that — despite public attempts to pivot toward diversity — neither Marvel nor DC is introducing female characters at a rate approaching gender parity. 
--   **Analysis summary**: [Write up two to three sentences describing the results of your analysis. Were you able to confirm the finding? If not, why not?]
+-   **Analysis summary**: We created graphs using the data to show the percentage of female characters introduced each year for both Marvel and DC. These graphs show that none of the years from 1939 to 2013 reach over 50% of female characters being introduced, which would be gender parity.
 
 ```{r}
 # Put code to reverse engineer sentence here
-dc_data |>
-  filter(SEX == "Female Characters" & YEAR == 2013) |>
-summarize(amount_women =n()) |>
-  mutate(pct_women =(amount_women/1967)*100)
 
-dc_data |>
-  filter(SEX == "Male Characters" & YEAR == 2013) |>
-   summarize(amount_men =n ()) |>
-  mutate(pct_men =(amount_men/4783)*100)
+marvel_characters_per_year <- marvel_data |> group_by(year) |> summarize(count=n())
 
+marvel_women_per_year <- marvel_data |> group_by(year) |> filter(sex == "Female Characters")  |> summarize(women=n())
 
-marvel_data |>
-  filter(sex == "Female Characters" & year == 2013) |>
-summarize(amount_women =n ()) |>
-  mutate(pct_women =(amount_women/3837)*100)
+marvel_per_year_w_women <- marvel_characters_per_year |> full_join(marvel_women_per_year)
+marvel_per_year_w_women <- marvel_per_year_w_women |> mutate(pct_women = (women/count) * 100)
 
-marvel_data |>
-  filter(sex == "Male Characters" & year == 2013) |>
-summarize(amount_men =n()) |>
-  mutate(pct_men =(amount_men/11638)*100)
+marvel_per_year_w_women |> ggplot() +
+  geom_line(aes(x=year, y = pct_women)) +
+  labs(
+    title="Percent of Marvel Characters Introduced Per Year that Are Women",
+    x = "Year",
+    y = "Percentage of Women"
+  )
+ 
+ 
+dc_characters_per_year <- dc_data |> group_by(YEAR) |> summarize(count=n())
+
+dc_women_per_year <- dc_data |> group_by(YEAR) |> filter(SEX == "Female Characters")  |> summarize(women=n())
+
+dc_per_year_w_women <- dc_characters_per_year |> full_join(dc_women_per_year)
+
+dc_per_year_w_women <- dc_per_year_w_women |> mutate(pct_women = (women/count) * 100)
+
+dc_per_year_w_women |> ggplot() +
+  geom_line(aes(x=YEAR, y = pct_women)) +
+  labs(
+    title="Percent of DC Characters Introduced Per Year that Are Women",
+    x = "Year",
+    y = "Percentage of Women"
+  )
 
 # Display results of code below this codeblock
 
@@ -155,10 +167,31 @@ summarize(amount_women =n()) |>
 ### Sentence 5
 
 -   **Sentence text**: In both DC and Marvel, women were of neutral allegiance at a higher rate than men. 
--   **Analysis summary**: [Write up two to three sentences describing the results of your analysis. Were you able to confirm the finding? If not, why not?]
+-   **Analysis summary**: We found that for DC characters, 9.9% of women were of neutral allegiance and 7.5% of men were of neutral allegiance. For Marvel characters, 16.6% of women were of neutral allegiance and 12.3% of men were of neutral allegiance. So the claim in the article is true.
 
 ```{r}
 # Put code to reverse engineer sentence here
+
+dc_data |>
+  filter(SEX == "Female Characters" & ALIGN == "Neutral Characters") |>
+   summarize(amount_women =n ()) |>
+  mutate(pct_women =(amount_women/1967)*100)
+
+dc_data |>
+  filter(SEX == "Male Characters" & ALIGN == "Neutral Characters") |>
+   summarize(amount_men =n ()) |>
+  mutate(pct_men =(amount_men/4783)*100)
+
+marvel_data |>
+  filter(sex == "Female Characters" & align == "Neutral Characters") |>
+summarize(amount_women =n()) |>
+  mutate(pct_women =(amount_women/3837)*100)
+
+marvel_data |>
+  filter(sex == "Male Characters" & align == "Neutral Characters") |>
+summarize(amount_men =n()) |>
+  mutate(pct_men =(amount_men/11638)*100)
+
 
 # Display results of code below this codeblock
 
