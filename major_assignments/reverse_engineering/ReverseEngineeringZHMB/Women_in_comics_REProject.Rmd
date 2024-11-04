@@ -69,7 +69,7 @@ marvel_data |>
 ### Sentence 2
 
 -   **Sentence text**: Women and men were almost exactly equally likely to have a secret identity in the Marvel universe (49.4 percent of males and 49.5 percent of females), while in the DC universe 51 percent of males had a secret identity and 45 percent of females did. 
--   **Analysis summary**: Using these datasets we got 31.8% of women in the DC Universe have secret identities and 36.6% of men have secret identities. For Marvel, we found that 39.2% of women characters have secret identities and 38.7% of men have secret identities. We think that these numbers may be below the numbers given in the article because there are other categories under identity other than Secret or Public. There are some characters that are categorized as "Known to Authorities Identity' and "No Dual Identity". It is unclear whether these were counted as secret identity or public in the findings for the article, however, if they were counted as secret that would increase the numbers.
+-   **Analysis summary**: Using these datasets we got 31,8% of women in the DC Universe have secret identities and 36.6% of men have secret identities. For Marvel, we found that 39.2% of women characters have secret identities and 38.7% of men have secret identities. We think that these numbers may be below the numbers given in the article because there are other categories under identity other than Secret or Public. There are some characters that are categorized as "Known to Authorities Identity' and "No Dual Identity". It is unclear whether these were counted as secret identity or public in the findings for the article, however, if they were counted as secret that would increase the numbers.
 
 ```{r}
 # Put code to reverse engineer sentence here
