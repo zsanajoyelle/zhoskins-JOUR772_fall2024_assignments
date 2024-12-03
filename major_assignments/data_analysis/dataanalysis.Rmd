@@ -1,0 +1,143 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+**Data Analysis Project**
+
+Zsana Hoskins, Cat Murphy, Ijeoma Opara
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code.
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*.
+
+```{r}
+library(janitor)
+library(tigris)
+library(tidycensus)
+library(tidyverse)
+```
+
+```{r}
+election_results <- read_csv("data/election_results.csv") |> clean_names()
+
+election_results <- election_results |>
+mutate(writeins = 
+  sharon_e_harris_write_in_democratic + ralph_jaffe_write_in_democratic + paij_boring_and_jaimey_rutschman_write_in_republican + sethatina_newman_write_in_republican + carol_asher_write_in_other_candidates + jokie_beckett_jr_write_in_other_candidates + claudia_de_la_cruz_and_karina_garcia_write_in_other_candidates + john_r_gibb_jr_write_in_other_candidates + joseph_kishore_write_in_other_candidates + william_p_stodden_write_in_other_candidates + shiva_ayyadurai_and_crystal_ellis_write_in_unaffiliated + president_r_boddie_write_in_unaffiliated + theo_brown_sr_write_in_unaffiliated + susan_maude_buchser_write_in_unaffiliated + john_cheng_and_wayne_waligorski_write_in_unaffiliated + cherunda_fox_write_in_unaffiliated + garry_hubbard_and_elizabeth_seymour_write_in_unaffiliated + shondra_irving_write_in_unaffiliated + douglas_jenkins_write_in_unaffiliated + brian_larry_kienitz_write_in_unaffiliated + richard_mayers_write_in_unaffiliated + andre_ramon_mc_neil_sr_write_in_unaffiliated + future_madam_potus_and_jessica_kennedy_write_in_unaffiliated + benjamin_l_schwalb_write_in_unaffiliated + peter_sonski_write_in_unaffiliated + lester_h_waller_jr_write_in_unaffiliated + cornel_west_and_melina_abdullah_write_in_unaffiliated + michael_yost_write_in_unaffiliated + other_write_ins) 
+
+election_results_clean <- election_results |>
+select(-sharon_e_harris_write_in_democratic, -ralph_jaffe_write_in_democratic, -paij_boring_and_jaimey_rutschman_write_in_republican, -sethatina_newman_write_in_republican, -carol_asher_write_in_other_candidates, -jokie_beckett_jr_write_in_other_candidates, -claudia_de_la_cruz_and_karina_garcia_write_in_other_candidates, -john_r_gibb_jr_write_in_other_candidates, -joseph_kishore_write_in_other_candidates, -william_p_stodden_write_in_other_candidates, -shiva_ayyadurai_and_crystal_ellis_write_in_unaffiliated, -president_r_boddie_write_in_unaffiliated, -theo_brown_sr_write_in_unaffiliated, -susan_maude_buchser_write_in_unaffiliated, -john_cheng_and_wayne_waligorski_write_in_unaffiliated, -cherunda_fox_write_in_unaffiliated, -garry_hubbard_and_elizabeth_seymour_write_in_unaffiliated, -shondra_irving_write_in_unaffiliated, -douglas_jenkins_write_in_unaffiliated, -brian_larry_kienitz_write_in_unaffiliated, -richard_mayers_write_in_unaffiliated, -andre_ramon_mc_neil_sr_write_in_unaffiliated, -future_madam_potus_and_jessica_kennedy_write_in_unaffiliated, -benjamin_l_schwalb_write_in_unaffiliated, -peter_sonski_write_in_unaffiliated, -lester_h_waller_jr_write_in_unaffiliated, -cornel_west_and_melina_abdullah_write_in_unaffiliated, -michael_yost_write_in_unaffiliated, -other_write_ins)
+
+election_results_clean <- election_results_clean |>
+  rename(harris_walz = kamala_d_harris_and_tim_walz_democratic, trump_vance = donald_j_trump_and_jd_vance_republican, oliver_ter_maat = chase_oliver_and_mike_ter_maat_libertarian, stein_green = jill_ellen_stein_and_rudolph_ware_green, kennedy_shanahan = robert_f_kennedy_jr_and_nicole_shanahan_unaffiliated)
+```
+
+```{r}
+mdpartybreakdown24 <- election_results_clean |>
+mutate(third_party = stein_green + kennedy_shanahan + oliver_ter_maat) 
+
+mdelection2024 <- election_results_clean |>
+mutate(third_party = stein_green + kennedy_shanahan + oliver_ter_maat) |>
+select(-stein_green, -kennedy_shanahan, -oliver_ter_maat)
+
+
+```
+
+```{r}
+mdelection2024 <- mdelection2024 |>
+mutate(total_votes = harris_walz + trump_vance + writeins + third_party) |>
+mutate(pct_harris_walz = (harris_walz / total_votes)*100) |>
+mutate(pct_trump_vance = (trump_vance / total_votes)*100) |>
+mutate(pct_third_party = (third_party / total_votes)*100) |>
+mutate(pct_writeins = (writeins / total_votes)*100)
+  
+```
+
+```{r}
+election_results2020 <- read_csv("data/MDelection_results2020.csv") |> clean_names() |>
+mutate(writeins = sharon_wallace_and_karen_m_short_write_in_democratic +  
+dennis_andrew_ball_write_in_other + 
+barbara_bellar_write_in_other + 
+president_boddie_write_in_other + 
+mary_ruth_caro_simmons_and_sherrie_dow_write_in_other + 
+brian_carroll_write_in_other + 
+todd_cella_write_in_other + 
+mark_charles_and_adrian_wallace_write_in_other + 
+phil_collins_write_in_other + 
+roque_rocky_de_la_fuente_write_in_other + 
+ryan_ehrenreich_and_veronica_ehrenreich_write_in_other + 
+randall_foltyniewkz_write_in_other +
+tom_hoefling_and_andy_prior_write_in_other + 
+shawn_howard_write_in_other + 
+johnson_lee_write_in_other + 
+susan_b_lochocki_write_in_other + 
+brock_pierce_and_karia_ballard_write_in_other + 
+deborah_rouse_and_sheila_cannon_write_in_other + 
+peter_w_sherrill_write_in_other + 
+jade_simmons_and_claudeligh_j_roze_write_in_other + 
+kasey_wells_write_in_other + 
+kanye_west_write_in_other +  
+gloria_la_riva_and_sunil_freeman_write_in_unaffiliated + 
+albert_raley_write_in_unaffiliated + 
+benjamin_schwalb_write_in_unaffiliated + 
+edward_shlikas_write_in_unaffiliated + 
+other_write_ins) |>
+select(-sharon_wallace_and_karen_m_short_write_in_democratic, 
+-dennis_andrew_ball_write_in_other,
+-barbara_bellar_write_in_other,
+-president_boddie_write_in_other,
+-mary_ruth_caro_simmons_and_sherrie_dow_write_in_other,
+-brian_carroll_write_in_other,
+-todd_cella_write_in_other,
+-mark_charles_and_adrian_wallace_write_in_other,
+-phil_collins_write_in_other,
+-roque_rocky_de_la_fuente_write_in_other,
+-ryan_ehrenreich_and_veronica_ehrenreich_write_in_other,
+-randall_foltyniewkz_write_in_other,
+-tom_hoefling_and_andy_prior_write_in_other,
+-shawn_howard_write_in_other,
+-johnson_lee_write_in_other,
+-susan_b_lochocki_write_in_other,
+-brock_pierce_and_karia_ballard_write_in_other,
+-deborah_rouse_and_sheila_cannon_write_in_other,
+-peter_w_sherrill_write_in_other,
+-jade_simmons_and_claudeligh_j_roze_write_in_other,
+-kasey_wells_write_in_other,
+-kanye_west_write_in_other,
+-gloria_la_riva_and_sunil_freeman_write_in_unaffiliated,
+-albert_raley_write_in_unaffiliated,
+-benjamin_schwalb_write_in_unaffiliated,
+-edward_shlikas_write_in_unaffiliated,
+-other_write_ins)
+```
+
+```{r}
+election_results_clean_2020 <- election_results2020|>
+rename(trump_pence = donald_j_trump_and_michael_pence_republican, biden_harris = joe_biden_and_kamala_harris_democratic, jorgenson_spike_cohen = jo_jorgensen_and_jeremy_spike_cohen_libertarian, hawkins_green = howie_gresham_hawkins_and_angela_walker_green, segal_de_graaf = jerome_m_segal_and_john_de_graaf_bread_and_roses) 
+  
+mdpartybreakdown20 <- election_results_clean_2020 |>
+mutate(third_party = jorgenson_spike_cohen + hawkins_green + segal_de_graaf) 
+
+
+```
+
+```{r}
+mdelection2020 <- election_results_clean_2020 |>
+mutate(third_party = jorgenson_spike_cohen + hawkins_green + segal_de_graaf)|>
+select(-jorgenson_spike_cohen, -hawkins_green, -segal_de_graaf)
+```
+
+```{r}
+mdelection2020 <- mdelection2020 |>
+mutate(total_votes = biden_harris + trump_pence + writeins + third_party) |>
+mutate(pct_biden_harris = (biden_harris / total_votes)*100) |>
+mutate(pct_trump_vance = (trump_pence / total_votes)*100) |>
+mutate(pct_third_party = (third_party / total_votes)*100) |>
+mutate(pct_writeins = (writeins / total_votes)*100)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
