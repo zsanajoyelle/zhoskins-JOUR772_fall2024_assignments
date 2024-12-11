@@ -136,6 +136,19 @@ mutate(pct_third_party = (third_party / total_votes)*100) |>
 mutate(pct_writeins = (writeins / total_votes)*100)
 ```
 
+```{r}
+md_voter_reg20 <- read_csv("data/mdvoterregistration20.csv") |> clean_names()
+
+md_voter_reg24 <- read_csv("data/mdvoterregistraion24.csv") |> clean_names()
+```
+
+```{r}
+md_pop_over18 <- get_acs(geography = "county",
+              variables = c(population = "B09021_001"),
+              state = "MD",
+              year = 2022)
+```
+
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
 
 When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file).
